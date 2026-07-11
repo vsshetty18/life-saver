@@ -115,8 +115,10 @@ def process_video(video_path, speed_limit, distance_between_lines):
             # --- Simple accident detection ---
             vehicle["accident_detected"] = _check_accident(vehicle)
 
-        cap.release()
-        break if frame_count > 2000 else None  # safety cap for very long videos (demo purposes)
+        
+if frame_count > 2000:  # safety cap for very long videos (demo purposes)
+    cap.release()
+    break
 
     cap.release()
 
