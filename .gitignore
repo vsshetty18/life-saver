@@ -1,0 +1,49 @@
+# ===============================
+# Root .gitignore
+# Covers both frontend and backend
+# ===============================
+
+# ---- Python / Backend ----
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+
+# Environment variables (NEVER commit real secrets)
+.env
+backend/.env
+
+# Database file (SQLite - don't commit local dev data)
+backend/database/*.db
+backend/database/app.db
+
+# Uploaded videos (can be large, shouldn't be in git)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# YOLO model weights (auto-downloaded on first run, large file)
+backend/model/*.pt
+yolov8n.pt
+
+# ---- Node / Frontend ----
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/dist-ssr/
+*.local
+
+# ---- Editor / OS ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---- Logs ----
+*.log
+npm-debug.log*
