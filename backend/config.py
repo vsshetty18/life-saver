@@ -9,6 +9,14 @@ from dotenv import load_dotenv
 # Load variables from .env file into the environment
 load_dotenv()
 
+# Absolute path to the backend/ folder (where this file lives).
+# Using an absolute path (instead of a relative "database/app.db") avoids
+# "unable to open database file" errors caused by the container's working
+# directory not matching where we expect it to be.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_DIR = os.path.join(BASE_DIR, "database")
+DEFAULT_DB_PATH = os.path.join(DATABASE_DIR, "app.db")
+
 
 class Config:
     """
@@ -19,9 +27,11 @@ class Config:
     # Secret key used by Flask for sessions/security
     SECRET_KEY = os.getenv("SECRET_KEY", "dev_secret_key")
 
-    # SQLite database file location
+    # SQLite database file location.
+    # Falls back to an absolute path under backend/database/app.db so it
+    # works the same whether run locally, in Docker, or on Render.
     SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL", "sqlite:///database/app.db"
+        "DATABASE_URL", f"sqlite:///{DEFAULT_DB_PATH}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False  # turn off unnecessary overhead
 
@@ -41,5 +51,5 @@ class Config:
     DISTANCE_BETWEEN_LINES = float(os.getenv("DISTANCE_BETWEEN_LINES", 10))  # meters
 
     # Folder where uploaded videos are stored
-    UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads")
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
     ALLOWED_EXTENSIONS = {"mp4", "avi", "mov"}
