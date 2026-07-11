@@ -4,10 +4,12 @@ This is the entry point of the backend server.
 It creates the Flask app, connects the database, and registers all API routes.
 """
 
+import os
 from flask import Flask
 from flask_cors import CORS
 from config import Config
 from models import db
+
 
 def create_app():
     """
@@ -24,7 +26,6 @@ def create_app():
     db.init_app(app)
 
     # Create the uploads folder if it doesn't exist
-    import os
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
     # Create all database tables (if they don't already exist)
@@ -32,7 +33,6 @@ def create_app():
         db.create_all()
 
     # ---- Register Blueprints (API routes) ----
-    # These will be created in upcoming files
     from routes.vehicle_routes import vehicle_bp
     from routes.alert_routes import alert_bp
     from routes.fastag_routes import fastag_bp
@@ -45,15 +45,18 @@ def create_app():
 
     @app.route("/")
     def health_check():
-        """Simple route to check if the server is running."""
+        """Simple route to check if the server is running. Render also
+        uses this for its default health check ping."""
         return {"status": "OK", "message": "Vehicle Speed Detection API is running"}
 
     return app
 
 
-# Create the app instance
+# Create the app instance — this is what gunicorn imports as "app:app"
 app = create_app()
 
 if __name__ == "__main__":
-    # debug=True gives auto-reload + detailed errors during development
-    app.run(debug=True, port=5000)
+    # Local dev only. In production, gunicorn (see Dockerfile CMD) runs this instead,
+    # binding to Render's dynamic $PORT.
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, host="0.0.0.0", port=port)
