@@ -18,6 +18,27 @@ DATABASE_DIR = os.path.join(BASE_DIR, "database")
 DEFAULT_DB_PATH = os.path.join(DATABASE_DIR, "app.db")
 
 
+def _int_env(key, default):
+    """
+    Safely reads an integer environment variable.
+    Falls back to `default` if the variable is missing OR blank/empty —
+    plain os.getenv(key, default) only falls back when the variable is
+    completely unset, not when it exists but is an empty string.
+    """
+    value = os.getenv(key)
+    if value is None or value.strip() == "":
+        return default
+    return int(value)
+
+
+def _float_env(key, default):
+    """Same idea as _int_env, but for float values."""
+    value = os.getenv(key)
+    if value is None or value.strip() == "":
+        return default
+    return float(value)
+
+
 class Config:
     """
     Central place for all app settings.
@@ -42,13 +63,13 @@ class Config:
 
     # Email (SMTP) credentials
     SMTP_SERVER = os.getenv("SMTP_SERVER")
-    SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
+    SMTP_PORT = _int_env("SMTP_PORT", 587)
     SMTP_EMAIL = os.getenv("SMTP_EMAIL")
     SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 
     # Speed detection settings
-    SPEED_LIMIT = int(os.getenv("SPEED_LIMIT", 60))  # km/h
-    DISTANCE_BETWEEN_LINES = float(os.getenv("DISTANCE_BETWEEN_LINES", 10))  # meters
+    SPEED_LIMIT = _int_env("SPEED_LIMIT", 60)  # km/h
+    DISTANCE_BETWEEN_LINES = _float_env("DISTANCE_BETWEEN_LINES", 10)  # meters
 
     # Folder where uploaded videos are stored
     UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
