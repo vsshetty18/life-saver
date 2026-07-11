@@ -1,0 +1,4 @@
+# This file exists only so Git tracks the (otherwise empty) uploads/ folder.
+# Git doesn't track empty directories, so this placeholder ensures the
+# "uploads" folder is present when someone clones the repo — Flask needs
+# it to exist for saving uploaded videos.
