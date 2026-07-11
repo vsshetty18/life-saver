@@ -29,13 +29,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the backend code
 COPY . .
 
-# Create uploads folder (in case it's not present)
-RUN mkdir -p uploads
+# Create uploads and database folders (in case they're not present)
+RUN mkdir -p uploads database
 
-# Render provides the PORT environment variable at runtime
-ENV PORT=5000
-EXPOSE 5000
+# Render injects its own PORT env var at runtime (defaults to 10000) —
+# we must bind to THAT port, not a hardcoded one, or Render can't route
+# incoming traffic to the container.
+EXPOSE 10000
 
-# Run with gunicorn in production (more robust than Flask's dev server)
-# Note: gunicorn must be added to requirements.txt
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--timeout", "120", "app:app"]
+# Run with gunicorn in production (more robust than Flask's dev server).
+# Shell form (no brackets) so $PORT is resolved at container start time,
+# not baked in at build time.
+CMD gunicorn --bind 0.0.0.0:$PORT --timeout 120 app:app
