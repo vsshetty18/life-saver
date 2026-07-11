@@ -14,7 +14,6 @@ since this is a college-level demo project.
 """
 
 import cv2
-import time
 from ultralytics import YOLO
 
 # Load YOLOv8 pretrained model once when this module is imported.
@@ -29,6 +28,9 @@ VEHICLE_CLASSES = {2: "car", 3: "motorcycle", 5: "bus", 7: "truck"}
 # to cover DISTANCE_BETWEEN_LINES (from config), so we can calculate speed.
 LINE_1_Y = 300
 LINE_2_Y = 500
+
+# Safety cap: stop processing very long videos after this many frames (demo purposes)
+MAX_FRAMES = 2000
 
 
 def get_centroid(box):
@@ -115,13 +117,61 @@ def process_video(video_path, speed_limit, distance_between_lines):
             # --- Simple accident detection ---
             vehicle["accident_detected"] = _check_accident(vehicle)
 
-        
-if frame_count > 2000:  # safety cap for very long videos (demo purposes)
-    cap.release()
-    break
+        # Safety cap: stop processing very long videos (demo purposes)
+        if frame_count > MAX_FRAMES:
+            break
 
     cap.release()
 
     # Build final result list
     final_results = []
-    for vehicle_id, data in
+    for vehicle_id, data in tracked_vehicles.items():
+        final_results.append({
+            "vehicle_id": vehicle_id,
+            "vehicle_type": data["type"],
+            "speed": data["speed"],
+            "is_overspeed": data["speed"] > speed_limit,
+            "accident_detected": data["accident_detected"]
+        })
+
+    return final_results
+
+
+def _match_to_existing(centroid, tracked_vehicles, max_distance=80):
+    """
+    Matches a new detection's centroid to an existing tracked vehicle
+    if it's within max_distance pixels of that vehicle's last known position.
+    This is a very simple tracking method (good enough for a demo project).
+    """
+    for vehicle_id, data in tracked_vehicles.items():
+        last_x, last_y = data["last_centroid"]
+        distance = ((centroid[0] - last_x) ** 2 + (centroid[1] - last_y) ** 2) ** 0.5
+        if distance < max_distance:
+            return vehicle_id
+    return None
+
+
+def _check_accident(vehicle):
+    """
+    Simple rule-based accident detection:
+    - Looks at the vehicle's recent Y-position movement.
+    - If it was moving fast and then suddenly stops (very little movement
+      over several recent frames), we flag it as a possible accident.
+    """
+    positions = vehicle["positions"]
+
+    # Need at least 10 frames of history to judge "sudden stop"
+    if len(positions) < 10:
+        return vehicle["accident_detected"]
+
+    recent = positions[-10:]
+
+    # Movement in the first half vs the second half of this recent window
+    early_movement = abs(recent[4][1] - recent[0][1])
+    late_movement = abs(recent[9][1] - recent[5][1])
+
+    # Was moving significantly, then suddenly almost stopped -> possible accident
+    if early_movement > 15 and late_movement < 3:
+        return True
+
+    return vehicle["accident_detected"]
