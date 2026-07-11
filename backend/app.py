@@ -28,6 +28,16 @@ def create_app():
     # Create the uploads folder if it doesn't exist
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
+    # Create the database folder if it doesn't exist.
+    # SQLite needs this directory to already be present before it can
+    # create the .db file inside it — this is what was missing on Render.
+    db_uri = app.config["SQLALCHEMY_DATABASE_URI"]
+    if db_uri.startswith("sqlite:///"):
+        db_path = db_uri.replace("sqlite:///", "", 1)
+        db_dir = os.path.dirname(db_path)
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
+
     # Create all database tables (if they don't already exist)
     with app.app_context():
         db.create_all()
