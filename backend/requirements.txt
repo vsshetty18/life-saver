@@ -10,6 +10,9 @@ Flask-Cors==4.0.1
 # Database ORM (works great with SQLite)
 Flask-SQLAlchemy==3.1.1
 
+# Production WSGI server (used by Dockerfile CMD on Render)
+gunicorn==22.0.0
+
 # Computer Vision + AI
 opencv-python==4.10.0.84
 ultralytics==8.2.103   # YOLOv8 for vehicle detection
